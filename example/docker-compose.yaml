@@ -1,0 +1,10 @@
+services:
+  openobserve:
+    image: public.ecr.aws/zinclabs/openobserve:latest
+    environment:
+      ZO_DATA_DIR: /data
+      ZO_ROOT_USER_EMAIL: admin@host.local
+      ZO_ROOT_USER_PASSWORD: Sup3rS3cr3tP@ssw0rd
+    ports:
+      - 5090:5080
+      - 5091:5081

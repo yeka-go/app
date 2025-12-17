@@ -1,0 +1,11 @@
+telemetry:
+  service_name: My App
+  otlp_grpc_host: localhost:5091
+  headers:
+    Authorization: "Basic YWRtaW5AaG9zdC5sb2NhbDpTdXAzclMzY3IzdFBAc3N3MHJk"
+    organization: myapp
+    stream-name: service-01
+  insecure: true
+  tracer: true
+  metric: true
+  logger: true
