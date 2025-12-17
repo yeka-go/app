@@ -1,0 +1,24 @@
+services:
+  openobserve:
+    image: public.ecr.aws/zinclabs/openobserve:latest
+    environment:
+      ZO_DATA_DIR: /data
+      ZO_ROOT_USER_EMAIL: admin@host.local
+      ZO_ROOT_USER_PASSWORD: Sup3rS3cr3tP@ssw0rd
+    ports:
+      - 5080:5080
+      - 5081:5081
+
+  postgres:
+    image: postgres:14.7
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: example
+    ports:
+      - 5432:5432
+
+  adminer:
+    image: adminer
+    ports:
+      - 8080:8080

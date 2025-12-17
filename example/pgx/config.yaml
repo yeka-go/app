@@ -1,0 +1,21 @@
+telemetry:
+  service_name: Example PGX
+  otlp_grpc_host: localhost:5081
+  headers:
+    Authorization: "Basic YWRtaW5AaG9zdC5sb2NhbDpTdXAzclMzY3IzdFBAc3N3MHJk"
+    organization: default
+    stream-name: service-01
+  insecure: true
+  tracer: true
+  metric: true
+  logger: true
+
+pgx:
+  example:
+    hosts: 127.0.0.1:5432
+    user: user
+    pass: password
+    dbname: example
+    options:
+      sslmode: disable
+      application_name: Example PGX

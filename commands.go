@@ -33,16 +33,21 @@ func executeCommand(appCtx context.Context) error {
 	rootCmd.SetContext(appCtx)
 
 	rootCmd.AddCommand(subCommands...)
+	defer func() {
+		recover()
+	}()
 	return rootCmd.Execute()
 }
 
 func preRun(cfgFile *string, runFn func(cmd *cobra.Command, args []string), runErrFn func(cmd *cobra.Command, args []string) error) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
+		cmd.SilenceUsage = true
 		if err := initConfig(*cfgFile); err != nil {
 			return err
 		}
 
 		if config != nil {
+			cmd.SetContext(contextWithConfig(cmd.Context()))
 			err := initTelemetry(config)
 			if err != nil {
 				return err

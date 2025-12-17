@@ -27,3 +27,11 @@ Featuring:
 - [ ] Generator
     - [ ] SQLC
     - [ ] OpenAPI
+
+## Application Flow
+
+- app.Run()
+  - Init Config (if config file defined)
+  - Init Telemetry (if defined in config)
+  - Execute Command
+  - Shutdown
