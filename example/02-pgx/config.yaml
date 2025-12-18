@@ -1,14 +1,16 @@
 telemetry:
   service_name: Example PGX
-  otlp_grpc_host: localhost:5081
-  headers:
-    Authorization: "Basic YWRtaW5AaG9zdC5sb2NhbDpTdXAzclMzY3IzdFBAc3N3MHJk"
-    organization: default
-    stream-name: service-01
-  insecure: true
-  tracer: true
-  metric: true
-  logger: true
+  tracer: {exporter: openobserve}
+  metric: {exporter: openobserve}
+  logger: {exporter: openobserve}
+  exporters:
+    openobserve:
+      otlp_grpc_host: localhost:5081
+      headers:
+        Authorization: "Basic YWRtaW5AaG9zdC5sb2NhbDpTdXAzclMzY3IzdFBAc3N3MHJk"
+        organization: default
+        stream-name: service-01
+      insecure: true
 
 pgx:
   example:

@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -25,14 +26,23 @@ import (
 )
 
 type telemetryConfig struct {
-	ServiceName  string            `mapstructure:"service_name"`
+	ServiceName string `mapstructure:"service_name"`
+
+	Tracer observabilityConfig `mapstructure:"tracer"`
+	Metric observabilityConfig `mapstructure:"metric"`
+	Logger observabilityConfig `mapstructure:"logger"`
+
+	Exporters map[string]exporterConfig `mapstructure:"exporters"`
+}
+
+type observabilityConfig struct {
+	Exporter string `mapstructure:"exporter"`
+}
+
+type exporterConfig struct {
 	OtelGRPCAddr string            `mapstructure:"otlp_grpc_host"`
 	Headers      map[string]string `mapstructure:"headers"`
 	Insecure     bool              `mapstructure:"insecure"`
-
-	Tracer bool `mapstructure:"tracer"`
-	Metric bool `mapstructure:"metric"`
-	Logger bool `mapstructure:"logger"`
 }
 
 func initTelemetry(config *viper.Viper) error {
@@ -60,22 +70,26 @@ func initTelemetry(config *viper.Viper) error {
 }
 
 func initMeter(cfg telemetryConfig, commonResource *resource.Resource) (ShutdownFunc, error) {
-	if !cfg.Metric {
+	if cfg.Metric.Exporter == "" {
 		return nil, nil
+	}
+	exp, ok := cfg.Exporters[cfg.Metric.Exporter]
+	if !ok {
+		return nil, errors.New("telemetry.metric.exporter not found: " + cfg.Metric.Exporter)
 	}
 
 	opts := []otlpmetricgrpc.Option{
 		otlpmetricgrpc.WithCompressor("gzip"),
 	}
 
-	if cfg.OtelGRPCAddr != "" {
-		opts = append(opts, otlpmetricgrpc.WithEndpoint(cfg.OtelGRPCAddr))
+	if exp.OtelGRPCAddr != "" {
+		opts = append(opts, otlpmetricgrpc.WithEndpoint(exp.OtelGRPCAddr))
 	}
-	if cfg.Insecure {
+	if exp.Insecure {
 		opts = append(opts, otlpmetricgrpc.WithInsecure())
 	}
-	if len(cfg.Headers) > 0 {
-		opts = append(opts, otlpmetricgrpc.WithHeaders(cfg.Headers))
+	if len(exp.Headers) > 0 {
+		opts = append(opts, otlpmetricgrpc.WithHeaders(exp.Headers))
 	}
 
 	exporter, err := otlpmetricgrpc.New(context.Background(), opts...)
@@ -134,22 +148,26 @@ func initLogger(cfg telemetryConfig, commonResource *resource.Resource) (Shutdow
 		slog.SetDefault(slog.New(slogmulti.Fanout(handler...)))
 	}()
 
-	if !cfg.Logger {
-		return func(ctx context.Context) error { return nil }, nil
+	if cfg.Logger.Exporter == "" {
+		return nil, nil
+	}
+	exp, ok := cfg.Exporters[cfg.Logger.Exporter]
+	if !ok {
+		return nil, errors.New("telemetry.logger.exporter not found: " + cfg.Logger.Exporter)
 	}
 
 	opts := []otlploggrpc.Option{
 		otlploggrpc.WithCompressor("gzip"),
 	}
 
-	if cfg.OtelGRPCAddr != "" {
-		opts = append(opts, otlploggrpc.WithEndpoint(cfg.OtelGRPCAddr))
+	if exp.OtelGRPCAddr != "" {
+		opts = append(opts, otlploggrpc.WithEndpoint(exp.OtelGRPCAddr))
 	}
-	if cfg.Insecure {
+	if exp.Insecure {
 		opts = append(opts, otlploggrpc.WithInsecure())
 	}
-	if len(cfg.Headers) > 0 {
-		opts = append(opts, otlploggrpc.WithHeaders(cfg.Headers))
+	if len(exp.Headers) > 0 {
+		opts = append(opts, otlploggrpc.WithHeaders(exp.Headers))
 	}
 
 	exporter, err = otlploggrpc.New(context.Background(), opts...)
@@ -163,27 +181,31 @@ func initLogger(cfg telemetryConfig, commonResource *resource.Resource) (Shutdow
 	)
 	global.SetLoggerProvider(provider)
 
-	handler = append(handler, otelslog.NewHandler("core/logger"))
+	handler = append(handler, otelslog.NewHandler("github.com/yeka-go/app"))
 	return provider.Shutdown, nil
 }
 
 func initTracer(cfg telemetryConfig, commonResource *resource.Resource) (ShutdownFunc, error) {
-	if !cfg.Tracer {
+	if cfg.Tracer.Exporter == "" {
 		return nil, nil
+	}
+	exp, ok := cfg.Exporters[cfg.Tracer.Exporter]
+	if !ok {
+		return nil, errors.New("telemetry.tracer.exporter not found: " + cfg.Tracer.Exporter)
 	}
 
 	opts := []otlptracegrpc.Option{
 		otlptracegrpc.WithCompressor("gzip"),
 	}
 
-	if cfg.OtelGRPCAddr != "" {
-		opts = append(opts, otlptracegrpc.WithEndpoint(cfg.OtelGRPCAddr))
+	if exp.OtelGRPCAddr != "" {
+		opts = append(opts, otlptracegrpc.WithEndpoint(exp.OtelGRPCAddr))
 	}
-	if cfg.Insecure {
+	if exp.Insecure {
 		opts = append(opts, otlptracegrpc.WithInsecure())
 	}
-	if len(cfg.Headers) > 0 {
-		opts = append(opts, otlptracegrpc.WithHeaders(cfg.Headers))
+	if len(exp.Headers) > 0 {
+		opts = append(opts, otlptracegrpc.WithHeaders(exp.Headers))
 	}
 
 	ctx := context.Background()
