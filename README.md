@@ -5,6 +5,7 @@ An opinionated approach to build golang application.
 Featuring:
 - [v] CLI Application (using [cobra][https://github.com/spf13/cobra])
 - [v] Configuration files (using [viper][https://github.com/spf13/viper])
+    - [ ] dotEnv support
     - [ ] Consul suuport
 - [v] OpenTelemetry
 - [ ] HTTP Server
@@ -13,7 +14,7 @@ Featuring:
 - [ ] HTTP Client
 - [ ] Data Storages
     - [ ] Postgres using [lib/pq](https://github.com/lib/pq)
-    - [ ] Postgres using [pgx](https://github.com/jackc/pgx)
+    - [v] Postgres using [pgx](https://github.com/jackc/pgx)
     - [ ] Mysql
     - [ ] MSSQL
     - [ ] SQLite
@@ -21,7 +22,7 @@ Featuring:
     - [ ] Redis
     - [ ] ElasticSearch
     - [ ] MongoDB
-    - [ ] S3
+    - [ ] S3 Storage
 - [ ] DB Migration
 - [ ] Mail
 - [ ] Generator
