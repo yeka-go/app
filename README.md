@@ -3,18 +3,18 @@
 An opinionated approach to build golang application.
 
 Featuring:
-- [v] CLI Application (using [cobra][https://github.com/spf13/cobra])
-- [v] Configuration files (using [viper][https://github.com/spf13/viper])
+- [x] CLI Application (using [cobra](https://github.com/spf13/cobra))
+- [x] Configuration files (using [viper](https://github.com/spf13/viper))
     - [ ] dotEnv support
     - [ ] Consul suuport
-- [v] OpenTelemetry
+- [x] OpenTelemetry
 - [ ] HTTP Server
     - [ ] Standard library
     - [ ] Gin
 - [ ] HTTP Client
 - [ ] Data Storages
     - [ ] Postgres using [lib/pq](https://github.com/lib/pq)
-    - [v] Postgres using [pgx](https://github.com/jackc/pgx)
+    - [x] Postgres using [pgx](https://github.com/jackc/pgx)
     - [ ] Mysql
     - [ ] MSSQL
     - [ ] SQLite

@@ -2,7 +2,7 @@ package app
 
 import (
 	"context"
-	"log"
+	"log/slog"
 
 	"github.com/spf13/viper"
 )
@@ -23,7 +23,7 @@ func initConfig(cfgFile string) error {
 		file = cfgFile
 	}
 	if file == "" {
-		log.Println("No config loaded")
+		slog.DebugContext(context.TODO(), "No config loaded")
 		return nil
 	}
 	config = viper.New()

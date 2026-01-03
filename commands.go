@@ -2,6 +2,10 @@ package app
 
 import (
 	"context"
+	"fmt"
+	"log/slog"
+	"runtime/debug"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -34,7 +38,13 @@ func executeCommand(appCtx context.Context) error {
 
 	rootCmd.AddCommand(subCommands...)
 	defer func() {
-		recover()
+		r := recover()
+		if r != nil {
+			slog.Error(fmt.Sprintf("%+v\n", r))
+			stack := strings.Split(string(debug.Stack()), "\n")
+			stack = append([]string{stack[0]}, stack[7:]...)
+			fmt.Printf("%s\n", strings.Join(stack, "\n"))
+		}
 	}()
 	return rootCmd.Execute()
 }
