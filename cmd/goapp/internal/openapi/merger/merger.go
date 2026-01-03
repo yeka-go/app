@@ -1,3 +1,5 @@
+// TODO Handle Swagger v2. This is coded for Swagger v3
+// TODO Add swagger validation
 package merger
 
 import (
@@ -6,6 +8,7 @@ import (
 	"log/slog"
 	"path"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -143,7 +146,7 @@ func (doc *Doc) resolve(basePath, targetFile, targetBasePath string, reslv *Reso
 		}
 
 		componentPath := getComponentPaths(newpath)
-		if (strings.HasPrefix(newpath, "/paths/") && componentPath != "") || (componentPath != "" && strings.HasPrefix(newpath, componentPath+"/")) {
+		if componentPath != "" && (strings.HasPrefix(newpath, "/paths/") || strings.HasPrefix(newpath, componentPath+"/") || strings.HasPrefix(newpath, "/components/")) {
 			if componentPath == "/components/examples" && Path(newpath).LastPath() == "examples" {
 				slog.Debug("    Moving example", "target", newpath, "value-from", v.RefFile+"#"+v.RefPath)
 				err = doc.Index(0).spec.SetPath(newpath, obj)
@@ -157,7 +160,7 @@ func (doc *Doc) resolve(basePath, targetFile, targetBasePath string, reslv *Reso
 				continue
 			}
 
-			targetPath = componentPath + "/" + reslv.getName(v)
+			targetPath = componentPath + "/" + reslv.getName(v, componentPath)
 			slog.Debug("    SetRef2", "target", newpath+"/$ref", "value", "#"+targetPath, "cp", componentPath, "np", newpath)
 			err = doc.Index(0).spec.SetPath(newpath+"/$ref", "#"+targetPath)
 			if err != nil {
@@ -211,6 +214,8 @@ func CombinePath(base, addition, sub string) string {
 	return base + strings.TrimSuffix(addition, "/$ref")
 }
 
+var regexNumbersSuffix = regexp.MustCompile(`\d+$`)
+
 type Resolver struct {
 	resolvedPaths  []string
 	alias          map[string]string // path to name
@@ -228,14 +233,12 @@ func NewResolver() *Resolver {
 }
 
 // isResolved check if a reference already moved to main document
-func (r *Resolver) isResolved(v ref) bool {
-	file := v.RefFullFile
-	path := v.Path
+func (r *Resolver) isResolved(vf ref) bool {
 	for _, v := range r.resolvedPaths {
-		if file+"#"+path+"/" == v {
+		if vf.RefFullFile+"#"+vf.Path+"/" == v {
 			return true
 		}
-		if strings.HasPrefix(file+"#"+path+"/", v) {
+		if strings.HasPrefix(vf.RefFullFile+"#"+vf.Path+"/", v) {
 			return true
 		}
 	}
@@ -246,7 +249,7 @@ func (r *Resolver) setResolved(v ref) {
 	r.resolvedPaths = append(r.resolvedPaths, v.RefFullFile+"#"+v.Path+"/")
 }
 
-func (r *Resolver) getName(v ref) string {
+func (r *Resolver) getName(v ref, cp string) string {
 	if r.alias[v.RefFullFile+"#"+v.RefPath] != "" {
 		return r.alias[v.RefFullFile+"#"+v.RefPath]
 	}
@@ -260,12 +263,13 @@ func (r *Resolver) getName(v ref) string {
 	// prevent name duplication
 	i := 1
 	for {
-		name := lastPartOfPath
+		name := regexNumbersSuffix.ReplaceAllString(lastPartOfPath, "")
 		if i > 1 {
 			name = lastPartOfPath + strconv.Itoa(i)
 		}
 		i++
-		_, used := r.usedAlias[strings.ToLower(name)]
+
+		_, used := r.usedAlias[cp+strings.ToLower(name)]
 		if !used {
 			lastPartOfPath = name
 			break
@@ -273,23 +277,9 @@ func (r *Resolver) getName(v ref) string {
 	}
 
 	r.alias[v.RefFullFile+"#"+v.RefPath] = lastPartOfPath
-	r.usedAlias[strings.ToLower(lastPartOfPath)] = v.RefFullFile + "#" + v.RefPath
+	r.usedAlias[cp+strings.ToLower(lastPartOfPath)] = v.RefFullFile + "#" + v.RefPath
 	return lastPartOfPath
 }
-
-// probably need to sort by resolved path first for each original items
-
-// isResolved(components.yaml /components/responses/UnauthorizedError)
-// -- find filename, check if anything have prefix of given parts
-//    -- if contains /components/responses/BadError -> resolved = true
-//    -- if contains /components/responses/ -> resolved = true
-//    -- if contains /components/ -> resolved true
-// if already resolved, proceed to map
-
-// also need to keep track of resolved path to determine how we resolve the object (direct or under /components)
-// /path/~1hello/$ref -> paths.yaml#/ = /path/~1hello
-// inside paths.yaml
-//   /get/$ref -> ops.yml#/ = /path/~1hello/get
 
 var componentLists = []string{"schema", "schemas", "responses", "parameters", "examples", "requestBodies", "headers", "securitySchemes", "links", "callbacks"}
 
