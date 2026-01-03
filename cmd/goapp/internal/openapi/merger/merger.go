@@ -54,6 +54,13 @@ func Open(file string) ([]byte, error) {
 
 	}
 
+	// for ref := range doc.Items() {
+	// 	fmt.Println("File: ", ref.filename)
+	// 	for _, v := range ref.refList {
+	// 		fmt.Println(v.Path, v.RefFile, v.RefPath)
+	// 	}
+	// }
+
 	err = doc.Resolve()
 	if err != nil {
 		log.Println("Resolve error:", err)
@@ -128,8 +135,7 @@ func (doc *Doc) resolve(basePath, targetFile, targetBasePath string, reslv *Reso
 
 		targetPath := newpath
 
-		s := strings.Split(v.RefPath, "/")
-		lastPartOfPath := s[len(s)-1]
+		lastPartOfPath := Path(v.RefPath).LastPath()
 		if lastPartOfPath == "" {
 			unnamedCounter++
 			lastPartOfPath = "UNNAMED" + strconv.Itoa(unnamedCounter)
@@ -137,13 +143,26 @@ func (doc *Doc) resolve(basePath, targetFile, targetBasePath string, reslv *Reso
 
 		// get naming should be separated from resolved-check
 		var err error
-		alias, found := reslv.isResolved(v.RefFullFile, v.RefPath, lastPartOfPath)
+		alias, found := reslv.isResolvedWithAlias(v.RefFullFile, v.RefPath, lastPartOfPath)
 
 		componentPath := getComponentPaths(newpath)
 		if (strings.HasPrefix(newpath, "/paths/") && componentPath != "") || (componentPath != "" && strings.HasPrefix(newpath, componentPath+"/")) {
 			targetPath = componentPath + "/" + alias
 
-			slog.Debug("    SetRef2", "target", newpath+"/$ref", "value", "#"+targetPath)
+			if componentPath == "/components/examples" && Path(newpath).LastPath() == "examples" {
+				slog.Debug("    Moving example", "target", newpath, "value-from", v.RefFile+"#"+v.RefPath)
+				err = doc.Index(0).spec.SetPath(newpath, obj)
+				if err != nil {
+					return err
+				}
+				slog.Debug("    Resolving example")
+				if err := doc.resolve(newpath, v.RefFullFile, v.RefPath, reslv); err != nil {
+					return err
+				}
+				continue
+			}
+
+			slog.Debug("    SetRef2", "target", newpath+"/$ref", "value", "#"+targetPath, "cp", componentPath, "np", newpath)
 			err = doc.Index(0).spec.SetPath(newpath+"/$ref", "#"+targetPath)
 			if err != nil {
 				return err
@@ -205,7 +224,7 @@ type Resolver struct {
 	alias         map[string]string
 }
 
-func (r *Resolver) isResolved(file, path, alias string) (string, bool) {
+func (r *Resolver) isResolvedWithAlias(file, path, alias string) (string, bool) {
 	for _, v := range r.resolvedPaths {
 		if file+"#"+path+"/" == v {
 			return r.alias[v], true
@@ -281,4 +300,11 @@ func resolvePath(file1, file2 string) string {
 		dir1 = dir1[0 : len(dir1)-1]
 	}
 	return "./" + strings.Join(append(dir1, dir2[i:]...), "/") + "/" + path.Base(file2)
+}
+
+type Path string
+
+func (p Path) LastPath() string {
+	parts := strings.Split(string(p), "/")
+	return parts[len(parts)-1]
 }
