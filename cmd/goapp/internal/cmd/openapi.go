@@ -3,7 +3,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 	"github.com/yeka-go/app"
-	"github.com/yeka-go/app/cmd/goapp/cmd/openapi"
+	"github.com/yeka-go/app/cmd/goapp/internal/cmd/openapi"
 )
 
 func init() {
