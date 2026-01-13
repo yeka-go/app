@@ -3,7 +3,7 @@ package merger_test
 import (
 	"testing"
 
-	"github.com/yeka-go/app/cmd/goapp/internal/openapi/merger"
+	"github.com/yeka-go/app/internal/openapi/merger"
 )
 
 func TestCombinePath(t *testing.T) {

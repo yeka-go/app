@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/spf13/cobra"
-	"github.com/yeka-go/app/cmd/goapp/internal/openapi/merger"
+	"github.com/yeka-go/app/internal/openapi/merger"
 )
 
 var MergeCmd = &cobra.Command{

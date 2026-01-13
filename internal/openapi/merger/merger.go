@@ -13,7 +13,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/yeka-go/app/cmd/goapp/internal/openapi"
+	"github.com/yeka-go/app/internal/openapi"
 )
 
 type ref struct {

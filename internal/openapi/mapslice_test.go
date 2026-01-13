@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/goccy/go-yaml"
-	"github.com/yeka-go/app/cmd/goapp/internal/openapi"
+	"github.com/yeka-go/app/internal/openapi"
 )
 
 var source = `{root: {satu: {nama: John, age: 17}, dua: [{nama: satu}, {nama: dua}]}}`

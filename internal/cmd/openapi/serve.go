@@ -1,15 +1,14 @@
 package openapi
 
 import (
-	"context"
 	"fmt"
 	"log"
-	"net/http"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
-	"github.com/yeka-go/app/cmd/goapp/internal/openapi/merger"
-	"github.com/yeka-go/app/cmd/goapp/internal/openapi/ui"
+	"github.com/yeka-go/app/internal/openapi/merger"
+	"github.com/yeka-go/app/internal/openapi/ui"
+	"github.com/yeka-go/app/httpserver/stdserver"
 )
 
 var serveTemplate string
@@ -45,16 +44,12 @@ var ServeCmd = &cobra.Command{
 			return
 		}
 
-		srv := http.Server{Addr: ":8123", Handler: ui.NewHandler(opt)}
-		go func() {
-			fmt.Println("starting server")
-			err := srv.ListenAndServe()
-			if err != nil {
-				log.Println(err)
-			}
-		}()
-		<-cmd.Context().Done()
-		srv.Shutdown(context.TODO())
+		srv := stdserver.New(stdserver.Config{Addr: ":8123"})
+		srv.Server.Handler = ui.NewHandler(opt)
+		fmt.Println("starting server on", srv.Server.Addr)
+		if err := srv.Run(cmd.Context()); err != nil {
+			fmt.Println(err.Error())
+		}
 	},
 }
 

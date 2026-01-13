@@ -18,7 +18,7 @@ func main() {
 			ctx, span := otel.Tracer("").Start(context.Background(), "app start")
 			defer span.End()
 
-			db, err := pgx.Connect(cmd.Context(), "example")
+			db, err := pgx.Get(cmd.Context(), "example")
 			if err != nil {
 				return fmt.Errorf("pgx.Connect: %w", err)
 			}

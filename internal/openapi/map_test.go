@@ -3,7 +3,7 @@ package openapi_test
 import (
 	"testing"
 
-	"github.com/yeka-go/app/cmd/goapp/internal/openapi"
+	"github.com/yeka-go/app/internal/openapi"
 )
 
 func TestMap(t *testing.T) {
