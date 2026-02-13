@@ -56,12 +56,10 @@ func preRun(cfgFile *string, runFn func(cmd *cobra.Command, args []string), runE
 			return err
 		}
 
-		if config != nil {
-			cmd.SetContext(contextWithConfig(cmd.Context()))
-			err := initTelemetry(config)
-			if err != nil {
-				return err
-			}
+		cmd.SetContext(contextWithConfig(cmd.Context(), configuration))
+		err := initTelemetry(configuration)
+		if err != nil {
+			return err
 		}
 
 		if runErrFn != nil {

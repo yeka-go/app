@@ -4,10 +4,10 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/spf13/viper"
+	"github.com/yeka-go/app/config"
 )
 
-var config *viper.Viper
+var configuration config.Config
 
 var configFile string
 
@@ -23,19 +23,20 @@ func initConfig(cfgFile string) error {
 		file = cfgFile
 	}
 	if file == "" {
-		slog.DebugContext(context.TODO(), "No config loaded")
+		slog.Debug("No config loaded")
 		return nil
 	}
-	config = viper.New()
-	config.SetConfigFile(file)
-	return config.ReadInConfig()
+
+	cfg, err := config.FromFile(cfgFile)
+	configuration = cfg
+	return err
 }
 
-func contextWithConfig(ctx context.Context) context.Context {
-	return context.WithValue(ctx, configContextKey{}, config)
+func contextWithConfig(ctx context.Context, cfg config.Config) context.Context {
+	return context.WithValue(ctx, configContextKey{}, cfg)
 }
 
-func ConfigFromContext(ctx context.Context) *viper.Viper {
-	cfg, _ := ctx.Value(configContextKey{}).(*viper.Viper)
+func ConfigFromContext(ctx context.Context) config.Config {
+	cfg, _ := ctx.Value(configContextKey{}).(config.Config)
 	return cfg
 }

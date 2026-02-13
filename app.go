@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 )
@@ -94,10 +95,15 @@ func shutdown() {
 		defer stop()
 		shutdownCtx = ctx
 	}
+
+	wg := sync.WaitGroup{}
 	for _, fn := range shutdownFuncs {
-		err := fn(shutdownCtx)
-		if err != nil {
-			slog.Error(err.Error())
-		}
+		wg.Go(func() {
+			err := fn(shutdownCtx)
+			if err != nil {
+				slog.Error(err.Error())
+			}
+		})
 	}
+	wg.Wait()
 }

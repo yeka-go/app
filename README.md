@@ -4,7 +4,7 @@ An opinionated approach to build golang application.
 
 Featuring:
 - [x] CLI Application (using [cobra](https://github.com/spf13/cobra))
-- [x] Configuration files (using [viper](https://github.com/spf13/viper))
+- [x] Configuration files (using [goccy-yaml](https://github.com/goccy/go-yaml))
     - [ ] dotEnv support
     - [ ] Consul suuport
 - [x] OpenTelemetry

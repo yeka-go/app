@@ -2,7 +2,6 @@ package collections
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/yeka-go/app"
@@ -24,14 +23,11 @@ func (i *Instances[T, U]) Get(cmdContext context.Context, connectionName string)
 
 	configKey := i.configPrefix + "." + connectionName
 	config := app.ConfigFromContext(cmdContext)
-	if config == nil || !config.IsSet(configKey) {
-		return emptyT, errors.New("config not found for " + configKey)
-	}
 
 	var cfg U
-	err := config.UnmarshalKey(configKey, cfg)
+	err := config.UnmarshalPath(configKey, cfg)
 	if err != nil {
-		return emptyT, fmt.Errorf("config.UnmarshalKey: %w", err)
+		return emptyT, fmt.Errorf("config.UnmarshalPath: %w", err)
 	}
 
 	obj, err = i.builderFn(cfg)

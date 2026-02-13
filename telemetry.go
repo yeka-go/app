@@ -8,8 +8,9 @@ import (
 	"os"
 	"time"
 
+	"github.com/goccy/go-yaml"
 	slogmulti "github.com/samber/slog-multi"
-	"github.com/spf13/viper"
+	"github.com/yeka-go/app/config"
 	"go.opentelemetry.io/contrib/bridges/otelslog"
 	otelruntime "go.opentelemetry.io/contrib/instrumentation/runtime"
 	"go.opentelemetry.io/contrib/propagators/b3"
@@ -45,11 +46,14 @@ type exporterConfig struct {
 	Insecure     bool              `mapstructure:"insecure"`
 }
 
-func initTelemetry(config *viper.Viper) error {
+func initTelemetry(config config.Config) error {
 	cfg := telemetryConfig{}
-	err := config.UnmarshalKey("telemetry", &cfg)
+	err := config.UnmarshalPath("$.telemetry", &cfg)
+	if errors.Is(err, yaml.ErrNotFoundNode) {
+		return nil
+	}
 	if err != nil {
-		return fmt.Errorf("config.Unmarshal: %w", err)
+		return fmt.Errorf("config.UnmarshalPath: %w", err)
 	}
 
 	commonResource := resource.NewWithAttributes(
