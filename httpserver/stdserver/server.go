@@ -2,7 +2,9 @@ package stdserver
 
 import (
 	"context"
+	"net"
 	"net/http"
+	"sync/atomic"
 	"time"
 
 	"github.com/yeka-go/app/collections"
@@ -34,13 +36,26 @@ func New(cfg Config) *Server {
 }
 
 type Server struct {
-	Server http.Server
-	config Config
+	Server      http.Server
+	config      Config
+	connCounter atomic.Int64 // TODO for metric (http.server.open_connections)
 }
 
+// Run the server
+// If appCtx is cancelled, graceful shutdown will be triggered
+// and will wait for ShutdownTimeout duration before forcefully kill the server.
 func (s *Server) Run(appCtx context.Context) error {
 	ctx, cancel := context.WithCancel(appCtx)
 	defer cancel()
+
+	s.Server.ConnState = func(c net.Conn, cs http.ConnState) {
+		switch cs {
+		case http.StateNew:
+			s.connCounter.Add(1)
+		case http.StateClosed:
+			s.connCounter.Add(-1)
+		}
+	}
 
 	var err2 error
 	go func() {
